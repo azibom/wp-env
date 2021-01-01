@@ -1,0 +1,49 @@
+version: "2"
+
+services:
+    wp-nginx:
+        image: nginx:latest
+        container_name: wp-nginx
+        ports:
+            - "86:80"
+        volumes:
+            - ./website:/var/www/html/website:rw # With read / write access
+            - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro # With read-only access
+        networks:
+            - wp-network
+        links:
+            - wp-php
+    wp-mariadb:
+        image: mariadb:latest
+        container_name: wp-mariadb
+        volumes:
+            - ./wp-volume-mariadb:/var/lib/mysql
+        networks:
+            - wp-network
+        environment:
+            MYSQL_ROOT_PASSWORD: 4813494d137e1631bba301d5acab6e7bb7aa74ce1185d456565ef51d737677b2
+    wp-php:
+        build: ./
+        container_name: wp-php
+        volumes:
+            - ./website:/var/www/html/website
+        networks:
+            - wp-network
+        links:
+            - wp-mariadb
+
+    wp-phpmyadmin:
+        image: phpmyadmin/phpmyadmin
+        container_name: wp-phpmyadmin
+        networks:
+            - wp-network
+        ports:
+            - "8184:80"
+        environment:
+            PMA_ARBITRARY: 1
+        links:
+            - wp-mariadb
+
+networks:
+    wp-network:
+        driver: bridge
